@@ -44,22 +44,28 @@
     <div class="form-popup" id="myForm">
         {!! Form::text('search', null, ['id'=>'search','placeholder' =>'Search GIF ..','class' => 'form-control','maxlength' => 100,'maxlength' => 100]) !!}
         <button class="btn btn-primary search">Search</button>
-        {{ Form::hidden('start', 0) }}{{ Form::hidden('totalrecords', 12) }}
-        <ul class="thumbnails image_picker_selector"></ul>
+        {{ Form::hidden('start', 0) }}{{ Form::hidden('totalrecords', 10) }}
+        <select class="image-picker show-html" id="select">
+                <option value=""></option>
+{{--                <option data-img-src="http://s3.amazonaws.com/resumator/customer_20190729133655_O33WBDSRAGZJWHDI/logos/20220221112033_New_Logo_small.png" value="1" selected>Cute Kitten 1</option>--}}
+            </select>
         <div class="row ">
-            <button  class="btn btn-dark" id="insert" disabled>Insert</button>
+            <button  class="btn btn-dark" id="insert">Insert</button>
             <button class="btn btn-light" id="cancel" onclick="closeForm()">Cancel</button>
         </div>
+
     </div>
     <x-slot name="js">
         <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+
         <script>
+
             $(document).on('click','.search',function (){
-                $("ul li").each(function() {
+                $("select option").each(function() {
                     $(this).remove();
                 });
                 let term=$('input[name=search]').val();
-                let limit=12;
+                let limit=10;
                 let offset=0;
                 $.ajax({
                     url:"http://localhost:5000/gifs",
@@ -70,35 +76,13 @@
                         body=JSON.parse(body);
                         for (let i = 0; i < body.data.length; i++) {
                             let obj = body.data[i];
-                            $('.thumbnails.image_picker_selector').append('<li><div class="thumbnail"><img id="'+obj.id+'" class="image_picker_image" src="'+obj.images.fixed_height.url+'" alt=""/><div class="overlay"><span></span></div></li>');
+                            $('#select').append('<option value="'+obj.id+'" data-img-src="'+obj.images.fixed_height.url+'"></option');
                         }
+                        $("select").imagepicker();
                     }
                 });
             })
-
-            $(document).on('click','.image_picker_image',function (){
-                setTimeout(function() {
-                    if($('.thumbnails.image_picker_selector').find('.image_picker_image.selected').length == 0)
-                    {
-                        $('#insert').prop('disabled', true);
-                    }
-                    else
-                    {
-                        $('#insert').prop('disabled', false);
-                    }
-                }, 100);
-
-                if($(this).hasClass('selected'))
-                {
-                    $(this).removeClass('selected');
-                    $(this).parent().css('background','none');
-                }
-                else
-                {
-                    $(this).addClass('selected');
-                    $(this).parent().css('background','#08C');
-                }
-            });
+            $("select").imagepicker()
 
             function closeForm() {
                 document.getElementById("myForm").style.display = "none";
@@ -112,28 +96,28 @@
                 }
 
                 render(){
-                    $("ul li").each(function() {
+                    $("#select option").each(function() {
                         $(this).remove();
                     });
+                    $("select").imagepicker();
                     $('input[name=search]').val('');
-                    $('#insert').prop('disabled', true);
                     $('.form-popup').show();
                     this.wrapper = document.createElement('div');
                     const insert = document.getElementById('insert');
                     insert.addEventListener('click', (event) => {
-                        this._createImage($("ul").find('.selected'));
+                        this._createImage($("#select").find(':selected').attr('data-img-src'),$("#select").find(':selected').val());
                         $('.form-popup').hide();
-                    },{once : true});
+                    });
                     return this.wrapper;
                 }
 
-                _createImage(selected){
-                    for (let i = 0; i <selected.length ; i++) {
-                        const image = document.createElement('img');
-                        image.id=$(selected[i]).attr('id');
-                        image.src= $(selected[i]).attr('src');
-                        this.wrapper.appendChild(image);
-                    }
+                _createImage(url, id){
+                    const image = document.createElement('img');
+                    image.id=id;
+                    this.wrapper.id=id+'simple-image';
+
+                    this.wrapper.appendChild(image);
+                    document.getElementById(id).src = url;
                 }
                     save(blockContent){
                     return {
@@ -147,9 +131,6 @@
                     tools:{
                         gif: GIF,
                     }
-                    data:{
-
-                    }
                 }
             );
 
@@ -161,11 +142,24 @@
                 }).catch((error) => {
                     console.log('Saving failed: ', error)
                 });
+
             })
+
+            // checkWindowSize();
+            //
+            // function checkWindowSize(){
+            //     if($(window).height() >= $(document).height()){
+            //         // Fetch records
+            //         fetchData();
+            //     }
+            // }
 
             // Fetch records
             function fetchData(){
-                let records=12;
+                // let offset=0;
+                // let rowperpage = Number($('#rowperpage').val());
+                // start = start + rowperpage;
+                let records=10;
                 let newstart = Number($('input[name=start]').val())+records;
                 let totalrecords = Number($('input[name=totalrecords]').val());
                 if(newstart <= totalrecords){
@@ -180,10 +174,14 @@
                             body=JSON.parse(body);
                             for (let i = 0; i < body.data.length; i++) {
                                 let obj = body.data[i];
-                                $('.thumbnails.image_picker_selector').append('<li><div class="thumbnail"><img id="'+obj.id+'" class="image_picker_image" src="'+obj.images.fixed_height.url+'" alt=""/><div class="overlay"><span></span></div></li>');
+                                $('#select').append('<option value="'+obj.id+'" data-img-src="'+obj.images.fixed_height.url+'"></option');
                             }
+                            $("select").imagepicker();
+                            //console.log('dd');
                             $('input[name=totalrecords]').val(newstart+records);
                             // $(".image_picker_image:last").after(response).show().fadeIn("slow");
+                            // Check if the page has enough content or not. If not then fetch records
+                            // checkWindowSize();
                         }
                     });
                 }
@@ -202,14 +200,15 @@
                     if($(event.target).attr('class')=='thumbnails image_picker_selector')
                     {
                         let position =  $('.thumbnails.image_picker_selector').scrollTop();
-                        let height =  $('.thumbnails.image_picker_selector')[0].scrollHeight-505;
-                        // console.log(position,height);
+                        let height =  $('.thumbnails.image_picker_selector')[0].scrollHeight-366;
+                        console.log(position,height);
                         if( position >= height ){
                             fetchData();
                         }
                     }
                 }, true);
             })
+
 
         </script>
     </x-slot>

@@ -19,7 +19,7 @@ ul.thumbnails.image_picker_selector {
     float: none; }
   /* line 30, source/sass/image-picker.scss */
   ul.thumbnails.image_picker_selector li {
-    margin: 0px 12px 12px 0px;
+    margin: 0px 12px 6px 0px;
     float: left; }
     /* line 35, source/sass/image-picker.scss */
     ul.thumbnails.image_picker_selector li .thumbnail {

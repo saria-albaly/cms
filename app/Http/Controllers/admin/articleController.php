@@ -6,7 +6,7 @@ use App\Http\Requests;
 use App\Http\Requests\CreatearticleRequest;
 use App\Http\Requests\UpdatearticleRequest;
 use App\Repositories\articleRepository;
-use App\Models\sms;
+use App\Models\article;
 use Flash;
 use App\Http\Controllers\Controller;
 use Response;
@@ -33,17 +33,17 @@ class articleController extends Controller
      */
     public function index(Request $request)
     {
-        if(auth()->user()->can('add users'))
-        {
+//        if(auth()->user()->can('add users'))
+//        {
             $articles = $this->articleRepository->all();
-        }
+//        }
 
-        if (isset($request['user']))
-            $user_id=$request['user'];
-        else
-            $user_id=auth()->user()->id;
-        DB::enableQueryLog();
-        return view('article.index')->with('articles', $articles)->with('selectedUser',$user_id);
+//        if (isset($request['user']))
+//            $user_id=$request['user'];
+//        else
+//            $user_id=auth()->user()->id;
+//        DB::enableQueryLog();
+        return view('article.index')->with('articles', $articles);
     }
 
     /**
@@ -66,18 +66,9 @@ class articleController extends Controller
     public function store(CreatearticleRequest $request)
     {
        $input = $request->all();
-        $input['slug']=function() use ($input) {
-            $slug .= 'article';
-            $slug .= '-';
-            $slug = \Str::slug($input['title']);
-            return $slug;
-        };
-        // if(getCarNumber($input['branch_id'])>$car_number)
         $car = $this->articleRepository->create($input);
 
-//        Flash::info('success');
-
-//        return redirect(route('article.index'));
+        return redirect(route('article.index'));
 }
 
     /**
@@ -164,7 +155,7 @@ class articleController extends Controller
 
         $this->articleRepository->delete($id);
 
-        Flash::success('تم حذف الرسالة بنجاح');
+//        Flash::success('تم حذف الرسالة بنجاح');
 
         return redirect(route('admin.article.index'));
     }
