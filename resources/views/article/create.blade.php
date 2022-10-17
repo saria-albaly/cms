@@ -147,9 +147,6 @@
                     tools:{
                         gif: GIF,
                     }
-                    data:{
-
-                    }
                 }
             );
 
